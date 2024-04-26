@@ -22,6 +22,7 @@ class GlucoseDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = GlucoseData
         fields = [
+            "id",
             "user",
             "device",
             "device_timestamp",
@@ -46,3 +47,7 @@ class GlucoseDataSerializer(serializers.ModelSerializer):
 
 class GlucoseDataUploadSerializer(serializers.Serializer):
     file = serializers.FileField()
+
+class GlucoseMinMaxSerializer(serializers.Serializer):
+    min_value = serializers.IntegerField()
+    max_value = serializers.IntegerField()

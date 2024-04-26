@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from io import StringIO
+import time
 
 from django.shortcuts import render
 from drf_yasg import openapi
@@ -10,9 +11,10 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db.models import Max, Min
 
 from .models import Customer, Device, GlucoseData
-from .serializers import GlucoseDataSerializer, GlucoseDataUploadSerializer
+from .serializers import GlucoseDataSerializer, GlucoseDataUploadSerializer, GlucoseMinMaxSerializer
 
 
 class GlucoseDataListView(generics.ListAPIView):
@@ -21,25 +23,6 @@ class GlucoseDataListView(generics.ListAPIView):
     filter_backends = [OrderingFilter]
     ordering_fields = ["device_timestamp"]
     pagination_class = LimitOffsetPagination
-
-    def get_queryset(self):
-        # Get query parameters
-        user_id = self.request.query_params.get("user_id")
-        start_timestamp = self.request.query_params.get("start_timestamp")
-        stop_timestamp = self.request.query_params.get("stop_timestamp")
-
-        # Start with all GlucoseData objects
-        queryset = GlucoseData.objects.all()
-
-        # Apply filters if provided
-        if user_id:
-            queryset = queryset.filter(user_id=user_id)
-        if start_timestamp:
-            queryset = queryset.filter(device_timestamp__gte=start_timestamp)
-        if stop_timestamp:
-            queryset = queryset.filter(device_timestamp__lte=stop_timestamp)
-
-        return queryset
 
     # Swagger documentation for filtering parameters
     @swagger_auto_schema(
@@ -65,7 +48,24 @@ class GlucoseDataListView(generics.ListAPIView):
         ]
     )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        # Get query parameters
+        user_id = self.request.query_params.get("user_id")
+        start_timestamp = self.request.query_params.get("start_timestamp")
+        stop_timestamp = self.request.query_params.get("stop_timestamp")
+
+        # Apply filters if provided
+        try:
+            if user_id:
+                self.queryset = self.queryset.filter(user_id=user_id)
+            if start_timestamp:
+                self.queryset = self.queryset.filter(device_timestamp__gte=start_timestamp)
+            if stop_timestamp:
+                self.queryset = self.queryset.filter(device_timestamp__lte=stop_timestamp)
+
+            return super().get(request, *args, **kwargs)
+
+        except Exception as e:
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GlucoseDataSingleView(generics.RetrieveAPIView):
@@ -163,3 +163,48 @@ class PrepopulateGlucoseData(APIView):
                 {"error": "An unexpected error occurred"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class GlucoseMinMaxView(generics.ListAPIView):
+    queryset = GlucoseData.objects.all()
+    serializer_class = GlucoseMinMaxSerializer
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["device_timestamp"]
+    pagination_class = LimitOffsetPagination
+
+    def get(self, request, *args, **kwargs):
+        # Get query parameters
+        user_id = self.request.query_params.get("user_id")
+        start_timestamp = self.request.query_params.get("start_timestamp")
+        stop_timestamp = self.request.query_params.get("stop_timestamp")
+
+        # Apply filters if provided
+        try:
+            queryset = self.get_queryset()
+            if user_id:
+                queryset = queryset.filter(user_id=user_id)
+            if start_timestamp:
+                queryset = queryset.filter(device_timestamp__gte=start_timestamp)
+            if stop_timestamp:
+                queryset = queryset.filter(device_timestamp__lte=stop_timestamp)
+            
+            max_glucose_history = queryset.aggregate(max_value=Max("glucose_history"))
+            max_glucose_scan = queryset.aggregate(max_value=Max("glucose_scan"))
+
+            max_value = max(max_glucose_history["max_value"], max_glucose_scan["max_value"])
+            
+            min_glucose_history = queryset.aggregate(min_value=Min("glucose_history"))
+            min_glucose_scan = queryset.aggregate(min_value=Min("glucose_scan"))
+
+            min_value = min(min_glucose_history["min_value"], min_glucose_scan["min_value"])
+            serializer = self.get_serializer(data={'min_value': min_value, 'max_value': max_value})
+
+            if serializer.is_valid():
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+
+        except Exception as e:
+            print(e)
+            return Response({})

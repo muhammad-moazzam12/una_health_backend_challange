@@ -19,7 +19,7 @@ This Home Task Django project provides APIs for glucose data, including retrievi
 1. Clone the project repository to your local machine:
 
     ```bash
-    git clone https://github.com/rakurai-io/rakurai_backend
+    git clone git@github.com:muhammad-moazzam12/una_health_backend_challange.git
     ```
 
 2. Navigate to the project directory:

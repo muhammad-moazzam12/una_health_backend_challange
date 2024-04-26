@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import GlucoseDataListView, GlucoseDataSingleView, PrepopulateGlucoseData
+from .views import GlucoseDataListView, GlucoseDataSingleView, PrepopulateGlucoseData, GlucoseMinMaxView
 
 urlpatterns = [
     path("v1/levels/", GlucoseDataListView.as_view(), name="glucose-data-list"),
@@ -13,5 +13,10 @@ urlpatterns = [
         "v1/prepopulate-data/",
         PrepopulateGlucoseData.as_view(),
         name="import-glucose-data",
+    ),
+    path(
+        "v1/min-max-blood/",
+        GlucoseMinMaxView.as_view(),
+        name="minmax-glucose-data",
     ),
 ]
