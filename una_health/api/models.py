@@ -31,7 +31,7 @@ class GlucoseData(models.Model):
     )
     rapid_acting_insulin = models.IntegerField(null=True, blank=True)
     non_numeric_food_data = models.CharField(max_length=255, null=True, blank=True)
-    carbohydrates_grams = models.FloatField(null=True, blank=True)
+    carbohydrates_grams = models.IntegerField(null=True, blank=True)
     carbohydrates_portions = models.IntegerField(null=True, blank=True)
     non_numeric_depot_insulin = models.CharField(max_length=255, null=True, blank=True)
     depot_insulin = models.IntegerField(null=True, blank=True)
