@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 
 
-class User(models.Model):
+class Customer(models.Model):
     user_id = models.CharField(primary_key=True, max_length=255)
     is_active = models.BooleanField(default=True)
 
@@ -14,7 +14,7 @@ class Device(models.Model):
 
 
 class GlucoseData(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(Customer, on_delete=models.CASCADE)
     device = models.ForeignKey(Device, on_delete=models.SET_NULL, null=True)
     device_timestamp = models.DateTimeField()
     record_type = models.IntegerField()
