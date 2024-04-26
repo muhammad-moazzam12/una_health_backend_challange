@@ -4,19 +4,18 @@ from django.db import models
 
 
 class User(models.Model):
-    user_id = models.CharField(primary_key=True)
+    user_id = models.CharField(primary_key=True, max_length=255)
     is_active = models.BooleanField(default=True)
 
 
 class Device(models.Model):
-    TYPE = ("FreeStyle LibreLink", "FreeStyle LibreLink")
-    device = models.CharField(max_length=255, choices=TYPE)
+    device = models.CharField(max_length=255)
     serial_number = models.CharField(max_length=255)
 
 
 class GlucoseData(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    device = models.ForeignKey(Device, on_delete=models.SET_NULL)
+    device = models.ForeignKey(Device, on_delete=models.SET_NULL, null=True)
     device_timestamp = models.DateTimeField()
     record_type = models.IntegerField()
     glucose_history = models.IntegerField(null=True, blank=True)
