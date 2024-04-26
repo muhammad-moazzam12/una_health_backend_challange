@@ -121,7 +121,7 @@ class PrepopulateGlucoseData(APIView):
                     row = row.replace("\r\n", "").split(",")
                     timestamp = row[2]
                     timestamp_obj = datetime.strptime(timestamp, "%d-%m-%Y %H:%M")
-                    device_data = {"device": row[0], "serial_number": row[1]}
+                    device_data = {"device_name": row[0], "serial_number": row[1]}
                     device, created = Device.objects.get_or_create(**device_data)
 
                     glucose_data_list.append(
