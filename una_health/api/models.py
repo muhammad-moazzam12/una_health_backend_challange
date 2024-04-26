@@ -7,10 +7,16 @@ class Customer(models.Model):
     user_id = models.CharField(primary_key=True, max_length=255)
     is_active = models.BooleanField(default=True)
 
+    def __str__(self) -> str:
+        return self.user_id
+
 
 class Device(models.Model):
-    device = models.CharField(max_length=255)
-    serial_number = models.CharField(max_length=255)
+    device_name = models.CharField(max_length=255)
+    serial_number = models.CharField(primary_key=True, max_length=255)
+
+    def __str__(self) -> str:
+        return self.serial_number
 
 
 class GlucoseData(models.Model):
