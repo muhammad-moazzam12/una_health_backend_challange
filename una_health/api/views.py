@@ -1,4 +1,3 @@
-import csv
 import logging
 from datetime import datetime
 from io import StringIO
@@ -24,14 +23,17 @@ class GlucoseDataListView(generics.ListAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
+        # Get query parameters
         user_id = self.request.query_params.get("user_id")
         start_timestamp = self.request.query_params.get("start_timestamp")
         stop_timestamp = self.request.query_params.get("stop_timestamp")
 
+        # Start with all GlucoseData objects
         queryset = GlucoseData.objects.all()
 
+        # Apply filters if provided
         if user_id:
-            queryset = self.queryset.filter(user_id=user_id)
+            queryset = queryset.filter(user_id=user_id)
         if start_timestamp:
             queryset = queryset.filter(device_timestamp__gte=start_timestamp)
         if stop_timestamp:
@@ -39,6 +41,7 @@ class GlucoseDataListView(generics.ListAPIView):
 
         return queryset
 
+    # Swagger documentation for filtering parameters
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter(
@@ -73,11 +76,13 @@ class GlucoseDataSingleView(generics.RetrieveAPIView):
 
 class PrepopulateGlucoseData(APIView):
     def integerConversion(self, val):
+        # Convert string to integer if possible
         if val.isdigit():
             return int(val)
         else:
             return None
 
+    # Swagger documentation for request body and responses
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -153,7 +158,6 @@ class PrepopulateGlucoseData(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            # Handle other unexpected errors
             logging.error(f"Unexpected error: {e}")
             return Response(
                 {"error": "An unexpected error occurred"},
